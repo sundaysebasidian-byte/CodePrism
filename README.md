@@ -1,13 +1,38 @@
-# CodePrism
+# CodePrism (contribution fork)
+
+This repository, [sundaysebasidian-byte/CodePrism](https://github.com/sundaysebasidian-byte/CodePrism),
+is a contribution fork of [knight22-21/CodePrism](https://github.com/knight22-21/CodePrism).
+The original CodePrism project and the published `codeprism-ai` package are maintained upstream;
+this fork owner contributes specific tests and fixes and does not claim original project authorship.
+The [MIT license](LICENSE) and its `Copyright (c) 2026 knight22-21` notice are preserved.
+
+Contribution records are available in the upstream pull requests:
+
+- [#69: watcher tests](https://github.com/knight22-21/CodePrism/pull/69)
+- [#73: verbose stats paths](https://github.com/knight22-21/CodePrism/pull/73)
+- [#74: query lookup errors](https://github.com/knight22-21/CodePrism/pull/74)
+- [#75: symbol-search pagination](https://github.com/knight22-21/CodePrism/pull/75)
+- [#76: project configuration for indexing](https://github.com/knight22-21/CodePrism/pull/76)
+
+Each PR records its scope, validation, AI assistance, and current review/merge status.
+Work is developed on separate contribution branches; a listed PR does not imply that its changes
+are included in this fork's `main` branch or have been merged upstream.
+
+[![Fork CI (main)](https://github.com/sundaysebasidian-byte/CodePrism/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/sundaysebasidian-byte/CodePrism/actions/workflows/ci.yml)
+[![Upstream CI (main)](https://github.com/knight22-21/CodePrism/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/knight22-21/CodePrism/actions/workflows/ci.yml)
+
+The CI badges refer to their respective repositories' `main` branches. The package badges and
+project overview below describe upstream CodePrism, not a separate package published by this fork.
+
+## Upstream project overview
 
 **Stop feeding your AI agent the whole codebase. Give it a graph.**
 
 CodePrism builds a persistent knowledge graph of your project — every function, class, import, and data-flow relationship — and exposes it to any AI coding agent via the [Model Context Protocol (MCP)](https://modelcontextprotocol.io). Instead of your agent reading 40 files to understand one function, it queries the graph and gets exactly what it needs in under 200 tokens.
 
-[![PyPI](https://img.shields.io/pypi/v/codeprism-ai)](https://pypi.org/project/codeprism-ai/)
-[![Python](https://img.shields.io/pypi/pyversions/codeprism-ai)](https://pypi.org/project/codeprism-ai/)
+[![Upstream PyPI](https://img.shields.io/pypi/v/codeprism-ai)](https://pypi.org/project/codeprism-ai/)
+[![Upstream Python](https://img.shields.io/pypi/pyversions/codeprism-ai)](https://pypi.org/project/codeprism-ai/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://github.com/knight22-21/CodePrism/actions/workflows/ci.yml/badge.svg)](https://github.com/knight22-21/CodePrism/actions)
 
 ---
 

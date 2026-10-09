@@ -265,6 +265,15 @@ reload it ([#35](https://github.com/knight22-21/CodePrism/issues/35)).
 
 ### MCP server
 
+`get_file_map(project_path="", limit=200, offset=0)` returns file roles under the served
+project root by default. Pass a project-relative directory such as `src`, or an absolute
+directory, to narrow it. Files are sorted by path; `limit` accepts 1-1000 and `offset` skips
+that many files. `total_files` and `total_symbols` count the whole selected directory,
+while `truncated` is true whenever the page omits files (including earlier pages).
+A directory with no indexed files returns an error. To read the next page, increase
+`offset` by `limit`. Python callers of `QueryEngine.get_file_map` can use `limit=None`
+for a complete map; internal CLI statistics and summaries do this.
+
 ```bash
 # stdio (Claude Code, Codex, Cursor, ...). With no path: the project containing the current directory
 codeprism serve

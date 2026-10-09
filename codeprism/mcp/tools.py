@@ -79,6 +79,9 @@ def file_map_to_dict(r: FileMap) -> dict[str, Any]:
         "project_path": r.project_path,
         "total_files": r.total_files,
         "total_symbols": r.total_symbols,
+        "limit": r.limit,
+        "offset": r.offset,
+        "truncated": r.truncated,
         "files": [
             {
                 "path": e.path,

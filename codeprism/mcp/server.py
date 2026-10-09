@@ -345,9 +345,19 @@ async def get_module_summary(file: str) -> dict[str, Any]:
 
 
 @mcp.tool()
-async def get_file_map(project_path: str = "") -> dict[str, Any]:
-    """Return the file tree with per-file role summaries (token-efficient entry point)."""
-    result = await _get().get_file_map(project_path)
+async def get_file_map(project_path: str = "", limit: int = 200, offset: int = 0) -> dict[str, Any]:
+    """Return a directory's file roles in path order, relative to the served project.
+
+    limit: 1-1000 files (default 200). offset: non-negative number of files to skip.
+    Totals describe the entire directory; truncated means this page omits files.
+    """
+    if limit is None:
+        return {"error": "limit must be between 1 and 1000"}
+    path = _abs(project_path or ".")
+    try:
+        result = await _get().get_file_map(path, limit=limit, offset=offset)
+    except ValueError as exc:
+        return {"error": str(exc), "project_path": path}
     return file_map_to_dict(result)
 
 

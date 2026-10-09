@@ -8,6 +8,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- `get_file_map` now filters indexed files by directory and returns a sorted page of up to 200
+  files by default. MCP callers can use `limit` (1-1000) and `offset`; totals cover the selected
+  directory and `truncated` reports omitted files. A directory with no indexed files returns
+  an error. Internal CLI consumers still request complete maps. (#49)
 - `index --languages` now rejects unknown names with a list of supported languages. Names remain
   case-insensitive, and supported aliases such as `py` and `C++` still work. (#55)
 - `codeprism --version` now exists, and `codeprism.__version__` is read from the installed

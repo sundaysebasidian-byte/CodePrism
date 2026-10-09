@@ -44,6 +44,9 @@ class FileMap:
     entries: list[FileMapEntry] = field(default_factory=list)
     total_files: int = 0
     total_symbols: int = 0
+    limit: int | None = None
+    offset: int = 0
+    truncated: bool = False
 
 
 @dataclass
@@ -176,8 +179,20 @@ class QueryEngine:
 
     # ── File map ──────────────────────────────────────────────────────────────
 
-    async def get_file_map(self, project_path: str = "") -> FileMap:
+    async def get_file_map(
+        self, project_path: str = "", *, limit: int | None = 200, offset: int = 0
+    ) -> FileMap:
+        """Return a sorted directory-scoped page; limit=None requests the complete map."""
+        if limit is not None and not 1 <= limit <= 1000:
+            raise ValueError("limit must be between 1 and 1000")
+        if offset < 0:
+            raise ValueError("offset must be non-negative")
         all_files = await self._storage.get_all_files()
+        if project_path:
+            root = Path(project_path).resolve()
+            all_files = [f for f in all_files if root in Path(f.path).parents]
+            if not all_files:
+                raise ValueError(f"No indexed files under directory '{project_path}'")
         all_syms = await self._storage.get_all_symbols()
 
         # Build per-file symbol counts
@@ -186,8 +201,12 @@ class QueryEngine:
             if sym.file_id in file_syms:
                 file_syms[sym.file_id].append(sym)
 
+        total_symbols = sum(len(syms) for syms in file_syms.values())
+        ordered_files = sorted(all_files, key=lambda x: x.path)
+        page = ordered_files[offset : None if limit is None else offset + limit]
+
         entries: list[FileMapEntry] = []
-        for f in sorted(all_files, key=lambda x: x.path):
+        for f in page:
             syms = file_syms[f.id]
             n_class = sum(1 for s in syms if s.kind == NodeKind.CLASS)
             n_func = sum(1 for s in syms if s.kind == NodeKind.FUNCTION)
@@ -215,7 +234,10 @@ class QueryEngine:
             project_path=project_path,
             entries=entries,
             total_files=len(all_files),
-            total_symbols=len(all_syms),
+            total_symbols=total_symbols,
+            limit=limit,
+            offset=offset,
+            truncated=len(entries) < len(all_files),
         )
 
     # ── Dependencies ──────────────────────────────────────────────────────────

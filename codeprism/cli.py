@@ -412,7 +412,7 @@ async def _stats(project: str, verbose: bool, json_output: bool = False) -> None
     engine, storage = await _open_session(project)
     try:
         data = await engine.get_stats()
-        file_map = await engine.get_file_map(project) if verbose else None
+        file_map = await engine.get_file_map(project, limit=None) if verbose else None
     finally:
         await storage.close()
 
@@ -632,7 +632,7 @@ get_impact(file, symbol)                → severity, dependents, affected tests
 get_callers(file, function)             → every call site with line numbers
 get_callees(file, function)             → every function this one calls
 search_symbol(query, kind=None)         → find symbols by name substring
-get_file_map(project_path)              → full file tree with role summaries
+get_file_map(project_path, limit, offset) → directory file roles (200 per page by default)
 get_dependencies(file)                  → imports: internal vs external
 scan_diff(original, proposed, file)     → security check before any write
 record_read(session_id, file, symbol)   → log what you've already read
@@ -1546,7 +1546,7 @@ async def _scan(target: str, all_: bool, diff: str | None, project: str) -> None
     if all_:
         engine, storage = await _open_session(project)
         try:
-            fm = await engine.get_file_map(project)
+            fm = await engine.get_file_map(project, limit=None)
         finally:
             await storage.close()
 

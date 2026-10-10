@@ -12,8 +12,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   `search_symbol` now accepts `limit` (1-500, default 50) and reports filtered `total` and
   `truncated`; kind/project filters apply before pagination. Semantic search keeps its
   existing cap and response shape. (#38)
+- CLI `callers`, `context`, `impact` and `summary` distinguish missing files and ambiguous paths,
+  report candidates on stderr, and exit with status 1 for lookup errors. `callers` no longer
+  reports an unknown symbol as a successful zero-callers result. MCP responses stay unchanged.
+  (#44)
 - `index --languages` now rejects unknown names with a list of supported languages. Names remain
   case-insensitive, and supported aliases such as `py` and `C++` still work. (#55)
+- `stats --verbose` shows project-relative paths and truncates very long paths instead of
+  wrapping the file table across multiple lines. (#17)
 - `codeprism --version` now exists, and `codeprism.__version__` is read from the installed
   package metadata instead of a hard-coded `0.1.0`. (#54)
 - `scan --diff` now rejects ranges beginning with `-`, so Git options such as `--stat` cannot be

@@ -12,8 +12,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   startup index. Explicit language and embedding options override the file, while omitted options
   preserve it; `index --no-embeddings` can disable configured embeddings. Automatic CLI/MCP parser
   workers and the library's in-process default remain unchanged. (#48)
+- CLI `callers`, `context`, `impact` and `summary` distinguish missing files and ambiguous paths,
+  report candidates on stderr, and exit with status 1 for lookup errors. `callers` no longer
+  reports an unknown symbol as a successful zero-callers result. MCP responses stay unchanged.
+  (#44)
 - `index --languages` now rejects unknown names with a list of supported languages. Names remain
   case-insensitive, and supported aliases such as `py` and `C++` still work. (#55)
+- `stats --verbose` shows project-relative paths and truncates very long paths instead of
+  wrapping the file table across multiple lines. (#17)
 - `codeprism --version` now exists, and `codeprism.__version__` is read from the installed
   package metadata instead of a hard-coded `0.1.0`. (#54)
 - `scan --diff` now rejects ranges beginning with `-`, so Git options such as `--stat` cannot be

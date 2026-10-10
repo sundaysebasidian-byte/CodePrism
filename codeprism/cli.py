@@ -10,6 +10,7 @@ import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+from rich.text import Text
 
 from .core.languages import SUPPORTED_LANGUAGES, normalize_language
 from .core.models import SYMBOL_KINDS
@@ -449,12 +450,23 @@ async def _stats(project: str, verbose: bool, json_output: bool = False) -> None
 
     if verbose and file_map:
         table = Table(title="Files")
-        table.add_column("Path")
+        table.add_column("Path", max_width=60, overflow="ellipsis")
         table.add_column("Lang")
         table.add_column("Lines", justify="right")
         table.add_column("Symbols", justify="right")
+        project_root = Path(project).resolve()
         for e in file_map.entries:
-            table.add_row(e.path, e.language, str(e.line_count), str(e.symbol_count))
+            try:
+                display_path = str(Path(e.path).relative_to(project_root))
+            except ValueError:
+                display_path = e.path
+            # Let the column shrink on narrow terminals, but keep each path on one line.
+            table.add_row(
+                Text(display_path, no_wrap=True),
+                e.language,
+                str(e.line_count),
+                str(e.symbol_count),
+            )
         console.print(table)
 
 

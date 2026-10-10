@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import re
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import typer
 from rich.console import Console
@@ -14,6 +15,9 @@ from rich.text import Text
 
 from .core.languages import SUPPORTED_LANGUAGES, normalize_language
 from .core.models import SYMBOL_KINDS
+
+if TYPE_CHECKING:
+    from .query.engine import QueryEngine
 
 # Allowlist for git ref characters — prevents argument injection via diff_range
 _SAFE_GIT_REF_RE = re.compile(r"^(?!-)[\w./~^@{}:+\-]{1,200}$")
@@ -64,6 +68,22 @@ async def _open_session(project_path: str):
     graph = GraphEngine()
     await graph.load_from_storage(storage)
     return QueryEngine(graph, storage), storage
+
+
+async def _resolve_query_file(engine: QueryEngine, file: str, project: str) -> str:
+    """Report failed file resolution on stderr before running a CLI query."""
+    path, error = await engine.resolve_file(file, project)
+    if error is not None:
+        if "candidates" in error:
+            typer.echo(error["error"], err=True)
+            for candidate in error["candidates"]:
+                typer.echo(f"  {candidate}", err=True)
+            typer.echo(error["hint"], err=True)
+        else:
+            typer.echo(f"Not found: {error['error']}", err=True)
+        raise typer.Exit(1)
+    assert path is not None
+    return path
 
 
 def _parse_target(target: str) -> tuple[str, str]:
@@ -198,12 +218,13 @@ async def _context(target: str, depth: int, project: str) -> None:
     file_path, sym_name = _parse_target(target)
     engine, storage = await _open_session(project)
     try:
-        result = await engine.get_context(file_path, sym_name, depth)
+        resolved = await _resolve_query_file(engine, file_path, project)
+        result = await engine.get_context(resolved, sym_name, depth)
     finally:
         await storage.close()
 
     if result is None:
-        console.print(f"[red]Not found:[/red] {sym_name} in {file_path}")
+        typer.echo(f"Not found: {sym_name} in {file_path}", err=True)
         raise typer.Exit(1)
 
     s = result.symbol
@@ -244,12 +265,13 @@ async def _impact(target: str, project: str) -> None:
     file_path, sym_name = _parse_target(target)
     engine, storage = await _open_session(project)
     try:
-        result = await engine.get_impact(file_path, sym_name)
+        resolved = await _resolve_query_file(engine, file_path, project)
+        result = await engine.get_impact(resolved, sym_name)
     finally:
         await storage.close()
 
     if result is None:
-        console.print(f"[red]Not found:[/red] {sym_name} in {file_path}")
+        typer.echo(f"Not found: {sym_name} in {file_path}", err=True)
         raise typer.Exit(1)
 
     severity_colour = {"LOW": "green", "MEDIUM": "yellow", "HIGH": "red", "CRITICAL": "bright_red"}
@@ -292,12 +314,13 @@ def summary(
 async def _summary(file: str, project: str) -> None:
     engine, storage = await _open_session(project)
     try:
-        result = await engine.get_module_summary(file)
+        resolved = await _resolve_query_file(engine, file, project)
+        result = await engine.get_module_summary(resolved)
     finally:
         await storage.close()
 
     if result is None:
-        console.print(f"[red]Not found:[/red] {file}")
+        typer.echo(f"Not found: {file}", err=True)
         raise typer.Exit(1)
 
     console.print(Panel(result.purpose, title=Path(file).name))
@@ -336,7 +359,11 @@ async def _callers(target: str, project: str) -> None:
     file_path, sym_name = _parse_target(target)
     engine, storage = await _open_session(project)
     try:
-        syms = await engine.get_callers(file_path, sym_name)
+        resolved = await _resolve_query_file(engine, file_path, project)
+        if await engine.find_symbol(resolved, sym_name) is None:
+            typer.echo(f"Not found: {sym_name} in {file_path}", err=True)
+            raise typer.Exit(1)
+        syms = await engine.get_callers(resolved, sym_name)
     finally:
         await storage.close()
 

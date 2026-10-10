@@ -89,28 +89,7 @@ async def _resolve_file(file: str) -> tuple[str | None, dict[str, Any] | None]:
     Tries the path under the project root first, then as a relative suffix
     ("utils.py", "api/utils.py") matched against every indexed file.
     """
-    storage = _get()._storage
-    matches = await storage.find_files_by_path(_abs(file))
-    if not matches:
-        matches = await storage.find_files_by_path(file)
-    if len(matches) == 1:
-        return matches[0].path, None
-    root = Path(_project_path).resolve()
-    if not matches:
-        return None, {"error": f"File '{file}' not indexed", "project_path": str(root)}
-
-    def rel(p: str) -> str:
-        try:
-            return Path(p).relative_to(root).as_posix()
-        except ValueError:
-            return p
-
-    candidates = sorted(rel(m.path) for m in matches)
-    return None, {
-        "error": f"Path '{file}' is ambiguous: {len(candidates)} indexed files match",
-        "candidates": candidates[:20],
-        "hint": f"Pass a longer path, e.g. '{candidates[0]}'",
-    }
+    return await _get().resolve_file(file, _project_path)
 
 
 async def _symbol_refs(symbols) -> list[dict[str, Any]]:

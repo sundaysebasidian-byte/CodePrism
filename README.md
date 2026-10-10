@@ -225,9 +225,11 @@ codeprism stats --verbose    # per-file breakdown
 codeprism stats --json
 ```
 
-Give enough of the path to be unique (`api/utils.py`, not `utils.py`). The MCP tools report an
-ambiguous path together with its candidates; the CLI commands do not, and `callers` even prints
-"No callers found" for a path it can't resolve ([#44](https://github.com/knight22-21/CodePrism/issues/44)).
+Give enough of the path to be unique (`api/utils.py`, not `utils.py`). The MCP tools and CLI
+`callers`, `context`, `impact` and `summary` commands report ambiguous paths with candidate files
+and a hint to use a longer path. These CLI commands write lookup errors to stderr and exit with
+status 1 for an unindexed file, ambiguous path or unknown symbol. `callers` prints "No callers
+found" and exits successfully only when the symbol exists and has no callers.
 
 ### Visualization
 

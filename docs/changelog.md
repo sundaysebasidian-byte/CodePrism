@@ -8,6 +8,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- CLI `callers`, `context`, `impact` and `summary` distinguish missing files and ambiguous paths,
+  report candidates on stderr, and exit with status 1 for lookup errors. `callers` no longer
+  reports an unknown symbol as a successful zero-callers result. MCP responses stay unchanged.
+  (#44)
 - `index --languages` now rejects unknown names with a list of supported languages. Names remain
   case-insensitive, and supported aliases such as `py` and `C++` still work. (#55)
 - `stats --verbose` shows project-relative paths and truncates very long paths instead of

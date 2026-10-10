@@ -114,6 +114,34 @@ class QueryEngine:
     async def get_file(self, file_path: str) -> FileRecord | None:
         return await self._storage.get_file_by_path(file_path)
 
+    async def resolve_file(
+        self, file: str, project_path: str
+    ) -> tuple[str | None, dict[str, Any] | None]:
+        """Resolve against the project root, then by suffix, or explain a failed lookup."""
+        root = Path(project_path).resolve()
+        path = Path(file)
+        absolute = str((path if path.is_absolute() else root / path).resolve()) if file else file
+        matches = await self._storage.find_files_by_path(absolute)
+        if not matches:
+            matches = await self._storage.find_files_by_path(file)
+        if len(matches) == 1:
+            return matches[0].path, None
+        if not matches:
+            return None, {"error": f"File '{file}' not indexed", "project_path": str(root)}
+
+        def rel(p: str) -> str:
+            try:
+                return Path(p).relative_to(root).as_posix()
+            except ValueError:
+                return p
+
+        candidates = sorted(rel(m.path) for m in matches)
+        return None, {
+            "error": f"Path '{file}' is ambiguous: {len(candidates)} indexed files match",
+            "candidates": candidates[:20],
+            "hint": f"Pass a longer path, e.g. '{candidates[0]}'",
+        }
+
     # ── Callers / callees ─────────────────────────────────────────────────────
 
     async def get_callers(self, file_path: str, symbol_name: str) -> list[SymbolRecord]:

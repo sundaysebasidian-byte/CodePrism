@@ -1,10 +1,13 @@
 """Directory-scoped file maps with stable, explicit pagination."""
 
+from io import StringIO
 from pathlib import Path
 
 import pytest
 from fastmcp import Client
+from rich.console import Console
 
+import codeprism.cli as cli
 import codeprism.mcp.server as server
 from codeprism.core.models import FileRecord, NodeKind, SymbolRecord
 from codeprism.query.engine import QueryEngine
@@ -93,6 +96,34 @@ async def test_default_and_maximum_caps(storage, graph, tmp_path, monkeypatch):
     assert Path(result["files"][0]["path"]).name == "0000.py"
     assert len((await server.get_file_map(limit=1000))["files"]) == 1000
     assert len((await engine.get_file_map(str(root), limit=None)).entries) == 1001
+
+
+@pytest.mark.parametrize("command", ["stats", "scan"])
+async def test_cli_consumers_keep_complete_index(storage, graph, tmp_path, monkeypatch, command):
+    """Whole-index CLI output includes files beyond the page cap and outside the root."""
+    root = tmp_path / "project"
+    root.mkdir()
+    paths = [root / f"{i:04d}.py" for i in range(201)] + [tmp_path / "external.py"]
+    for path in paths:
+        path.write_text("value = 1\n", encoding="utf-8")
+        await storage.upsert_file(FileRecord.create(str(path), language="python", line_count=1))
+    engine = QueryEngine(graph, storage)
+
+    async def open_session(project):
+        return engine, storage
+
+    output = StringIO()
+    monkeypatch.setattr(cli, "_open_session", open_session)
+    monkeypatch.setattr(cli, "console", Console(file=output, width=120))
+    if command == "stats":
+        await cli._stats(str(root), verbose=True)
+        table = output.getvalue().rsplit("Files", 1)[1]
+        rows = [line for line in table.splitlines() if line.lstrip().startswith("│")]
+        assert len(rows) == len(paths)
+        assert "0200.py" in table
+    else:
+        await cli._scan(".", all_=True, diff=None, project=str(root))
+        assert "202 files · 0 issue(s) found" in output.getvalue()
 
 
 @pytest.mark.parametrize("kwargs", [{"limit": 0}, {"limit": -1}, {"limit": 1001}, {"offset": -1}])

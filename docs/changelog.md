@@ -12,8 +12,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
   files by default. MCP callers can use `limit` (1-1000) and `offset`; totals cover the selected
   directory and `truncated` reports omitted files. A directory with no indexed files returns
   an error. Internal CLI consumers still request complete maps. (#49)
+- CLI `callers`, `context`, `impact` and `summary` distinguish missing files and ambiguous paths,
+  report candidates on stderr, and exit with status 1 for lookup errors. `callers` no longer
+  reports an unknown symbol as a successful zero-callers result. MCP responses stay unchanged.
+  (#44)
 - `index --languages` now rejects unknown names with a list of supported languages. Names remain
   case-insensitive, and supported aliases such as `py` and `C++` still work. (#55)
+- `stats --verbose` shows project-relative paths and truncates very long paths instead of
+  wrapping the file table across multiple lines. (#17)
 - `codeprism --version` now exists, and `codeprism.__version__` is read from the installed
   package metadata instead of a hard-coded `0.1.0`. (#54)
 - `scan --diff` now rejects ranges beginning with `-`, so Git options such as `--stat` cannot be
